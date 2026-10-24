@@ -30,6 +30,40 @@ When a build fails, an import breaks, or a regression test crashes, developers o
 
 ---
 
+## ⏱️ Current Status & Hackathon Implementation Timeline
+
+> **Overall Progress: 6 / 7 Milestones Completed (~86%)**  
+> `████████████████████████████████████░░░░░░`  
+> *Target Submission Deadline: 30 October 2026 (10:00 AM PT / 10:30 PM IST)*
+
+| Phase / Day | Focus & Deliverable | Exit Criterion | Status |
+|:---|:---|:---|:---:|
+| **Day 1** (Oct 24) | Repo foundation, Token Factory client, API schemas & base fixture | Live inference verified & sample fixture defined | ![Completed](https://img.shields.io/badge/Status-Completed-brightgreen.svg) |
+| **Day 2** (Oct 25) | CLI skeleton, project discovery, bounded context & secret redaction | Bounded context collected without secret leaks | ![Completed](https://img.shields.io/badge/Status-Completed-brightgreen.svg) |
+| **Day 3** (Oct 26) | Structured Pydantic diagnosis & deterministic patch validator | Traversal and malformed patches strictly blocked | ![Completed](https://img.shields.io/badge/Status-Completed-brightgreen.svg) |
+| **Day 4** (Oct 27) | Human approval gate, diff preview & safe test runner | Predefined test passes and exit code is reported | ![Completed](https://img.shields.io/badge/Status-Completed-brightgreen.svg) |
+| **Day 5** (Oct 28) | Security regression suite & cross-platform testing (Win/Linux) | 18/18 pytest suite passing cleanly | ![Completed](https://img.shields.io/badge/Status-Completed-brightgreen.svg) |
+| **Day 6** (Oct 29) | Public repository, Apache 2.0 license, full docs & automated demo | Clean clone works & demo script succeeds | ![Completed](https://img.shields.io/badge/Status-Completed-brightgreen.svg) |
+| **Day 7** (Oct 30) | Under 3-minute video demo, tool feedback & Devpost submission | Devpost submission completed before deadline | ![In Progress](https://img.shields.io/badge/Status-In%20Progress-yellow.svg) |
+
+```mermaid
+flowchart LR
+    D1["Day 1: Setup & API"] --> D2["Day 2: Context & Scanner"]
+    D2 --> D3["Day 3: Nemotron & Validator"]
+    D3 --> D4["Day 4: Approval & Runner"]
+    D4 --> D5["Day 5: 18x Tests & Polish"]
+    D5 --> D6["Day 6: Public Repo & Demo"]
+    D6 --> D7["Day 7: Demo Video & Devpost"]
+
+    classDef done fill:#2ea44f,stroke:#22863a,color:#fff;
+    classDef active fill:#e3b341,stroke:#d99b1a,color:#000;
+
+    class D1,D2,D3,D4,D5,D6 done;
+    class D7 active;
+```
+
+---
+
 ## 🏗️ Architecture & Data Flow
 
 ```mermaid
