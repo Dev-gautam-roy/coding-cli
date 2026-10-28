@@ -32,7 +32,7 @@ console = Console()
 
 @app.command()
 def doctor():
-    """Verify local setup, Python version, git availability, and Nebius configuration."""
+    """Verify local setup, Python version, git availability, and AI model provider configuration."""
     console.print(Panel("[bold cyan]RepoMedic Environment Doctor[/bold cyan]", expand=False))
     table = Table(title="System & Configuration Check")
     table.add_column("Component", style="bold")
@@ -57,18 +57,19 @@ def doctor():
         str(git_bin or "Not in PATH; pure-Python patcher fallback will be used"),
     )
 
-    # Nebius Token Factory config
+    # Provider config
     try:
         settings = load_settings()
+        table.add_row("Detected Provider", "[green]OK[/green]", settings.provider)
         table.add_row(
-            "Nebius API Key",
+            "API Key",
             "[green]CONFIGURED[/green]",
             f"Key: {settings.masked_api_key()}",
         )
-        table.add_row("Nebius Base URL", "[green]OK[/green]", settings.base_url)
+        table.add_row("Base URL", "[green]OK[/green]", settings.base_url)
         table.add_row("Configured Model", "[green]OK[/green]", settings.model)
     except Exception as exc:
-        table.add_row("Nebius Settings", "[red]MISSING/INVALID[/red]", str(exc))
+        table.add_row("AI Provider Config", "[red]MISSING/INVALID[/red]", str(exc))
 
     console.print(table)
 
@@ -125,7 +126,7 @@ def diagnose(
         help="Save structured diagnosis JSON to this path",
     ),
 ):
-    """Analyze repository and error logs with NVIDIA Nemotron to generate a structured diagnosis."""
+    """Analyze repository and error logs with configured AI model to generate a structured diagnosis."""
     root = path.resolve()
     console.print(f"[bold cyan]Collecting bounded context for:[/bold cyan] {root}")
 
@@ -138,7 +139,7 @@ def diagnose(
         console.print(f"  [+] Error log included (approx {context.report.total_tokens_approx} context tokens)")
 
     settings = load_settings()
-    console.print(f"\n[bold green]Calling NVIDIA Nemotron ({settings.model}) via Nebius Token Factory...[/bold green]")
+    console.print(f"\n[bold green]Calling {settings.provider} ({settings.model})...[/bold green]")
 
     user_prompt = build_diagnosis_prompt(context)
     raw_response = ask_model(settings, SYSTEM_PROMPT, user_prompt)
