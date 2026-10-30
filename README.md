@@ -96,118 +96,170 @@ flowchart TD
 
 ---
 
-## 🚀 Quickstart & Setup
+## ⚡ Quickstart Guide (Up & Running in 2 Minutes)
+
+Follow these simple steps to install, configure, and run RepoMedic on your machine.
 
 ### Prerequisites
-- **Python**: 3.11 or newer (tested on Python 3.11, 3.12, and 3.13)
-- **Git**: Installed and available in PATH
-- **Any AI API Key**: Nebius Token Factory, NVIDIA NIM (free), OpenAI, Groq, OpenRouter, etc.
+- **Python 3.11+** installed (`python --version`)
+- **Git** installed and available in PATH
+- **Any AI API Key** (Nebius Token Factory, NVIDIA NIM, OpenAI, Groq, OpenRouter, or local LLM)
 
-### 1. Installation
+---
 
-Clone the repository and set up a local virtual environment:
+### Step 1: Clone & Setup Environment
 
-**On Linux / macOS:**
+#### 🐧 Linux / macOS:
 ```bash
+# 1. Clone the repository
 git clone https://github.com/Dev-gautam-roy/coding-cli.git repomedic
 cd repomedic
+
+# 2. Create and activate a virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
+
+# 3. Install RepoMedic in editable mode
 pip install --upgrade pip
 pip install -e ".[dev]"
 ```
 
-**On Windows (PowerShell):**
+#### 🪟 Windows (PowerShell):
 ```powershell
+# 1. Clone the repository
 git clone https://github.com/Dev-gautam-roy/coding-cli.git repomedic
 cd repomedic
+
+# 2. Create and activate a virtual environment
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
+
+# 3. Install RepoMedic in editable mode
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
 
-### 2. Configure Credentials (Choose Any Provider)
+---
 
-Copy `.env.example` to `.env`:
+### Step 2: Configure Your API Key
+
+Create your local `.env` configuration file from the template:
+
+**Linux / macOS:**
 ```bash
 cp .env.example .env
 ```
+**Windows (PowerShell):**
+```powershell
+Copy-Item .env.example .env
+```
 
-RepoMedic automatically detects whichever key you provide in `.env`:
+Open `.env` in any editor and set **ONE** of the following options:
 
-#### Option A: Nebius Token Factory (Hackathon Default)
+#### Option A: Nebius Token Factory (Official Hackathon Provider)
 ```env
 NEBIUS_API_KEY=your_token_factory_key
 NEBIUS_BASE_URL=https://api.tokenfactory.us-central1.nebius.com/v1/
 NEBIUS_MODEL=nvidia/Nemotron-3_5-Lightning
 ```
 
-#### Option B: NVIDIA NIM (Free without credit card at build.nvidia.com)
+#### Option B: NVIDIA NIM (Free instant key, no credit card required at [build.nvidia.com](https://build.nvidia.com))
 ```env
-NVIDIA_API_KEY=nvapi-...
+NVIDIA_API_KEY=nvapi-your_nvidia_key_here
 ```
 
 #### Option C: OpenAI
 ```env
-OPENAI_API_KEY=sk-...
+OPENAI_API_KEY=sk-your_openai_key_here
 OPENAI_MODEL=gpt-4o-mini
 ```
 
-#### Option D: Groq (Ultra-fast free tier at console.groq.com)
+#### Option D: Groq (Ultra-fast free tier at [console.groq.com](https://console.groq.com))
 ```env
-GROQ_API_KEY=gsk_...
+GROQ_API_KEY=gsk_your_groq_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
 ```
 
-#### Option E: OpenRouter or Custom/Local Model (Ollama, vLLM)
+#### Option E: Local LLMs (Ollama / vLLM / LM Studio)
 ```env
-LLM_API_KEY=your_key_or_dummy
+LLM_API_KEY=dummy-token
 LLM_BASE_URL=http://localhost:11434/v1/
 LLM_MODEL=llama3.2
 ```
 
-*(Note: `.env` is protected by `.gitignore` and is never committed to source control).*
+> **Note**: `.env` is ignored by Git to ensure your secrets are never committed.
 
 ---
 
-## 💻 CLI Commands
+### Step 3: Run the Pre-Flight Check (`repomedic doctor`)
 
-RepoMedic provides a unified suite of developer commands:
+Verify your installation, Python environment, Git path, and AI credentials:
 
-### `repomedic doctor`
-Validates local Python runtime, git installation, and automatically checks your configured AI provider:
 ```bash
 repomedic doctor
 ```
 
-### `repomedic inspect`
-Inspects workspace structure, identifies project manifests, and enumerates candidate source files without modifying any files.
-```bash
-repomedic inspect ./fixtures/broken_sample_project
+**Expected output:**
+```
++------------------------------+
+| RepoMedic Environment Doctor |
++------------------------------+
+                       System & Configuration Check                        
++-------------------------------------------------------------------------+
+| Component         | Status     | Details                                |
+|-------------------+------------+----------------------------------------|
+| Python Runtime    | OK         | Python 3.13.2 (Supported)              |
+| Git Executable    | OK         | C:\Program Files\Git\cmd\git.EXE       |
+| Detected Provider | OK         | Nebius Token Factory (or NVIDIA NIM)   |
+| API Key           | CONFIGURED | Key: nvap...7890                       |
+| Base URL          | OK         | https://integrate.api.nvidia.com/v1/   |
+| Configured Model  | OK         | nvidia/llama-3.1-nemotron-70b-instruct |
++-------------------------------------------------------------------------+
 ```
 
-### `repomedic diagnose`
-Collects bounded source context, optionally includes error logs, and queries the AI model for root-cause analysis and a unified diff patch.
-```bash
-# Basic diagnosis
-repomedic diagnose ./fixtures/broken_sample_project
+---
 
-# Diagnosis with specific error log and output artifact
-repomedic diagnose ./fixtures/broken_sample_project --log ./artifacts/test.log --out ./artifacts/diagnosis.json
+### Step 4: Run the Automated 5-Step Demo
+
+To witness the entire lifecycle—from baseline test failure, AI-driven diagnosis, security gate validation, diff inspection, and passing verification—simply run:
+
+```bash
+python demo/app.py
 ```
 
-### `repomedic apply`
-Validates that all patch paths remain inside the workspace, displays a unified diff preview, and requests explicit user confirmation before applying.
+This self-contained script runs on the bundled deterministic fixture and proves the repair cycle end-to-end!
+
+---
+
+### Step 5: Test on Your Own Repository
+
+To diagnose and repair any repository:
+
 ```bash
-repomedic apply ./fixtures/broken_sample_project --patch ./fixtures/fix_calculator.patch
+# 1. Inspect repository structure & manifests
+repomedic inspect /path/to/repo
+
+# 2. Diagnose an issue (optionally pass test/build error logs)
+repomedic diagnose /path/to/repo --log /path/to/test.log --out /path/to/fix.json
+
+# 3. Safely preview and apply an approved unified diff patch
+repomedic apply /path/to/repo --patch /path/to/fix.patch
+
+# 4. Verify that the fix passes repository tests
+repomedic verify /path/to/repo --profile pytest
 ```
 
-### `repomedic verify`
-Executes an allowlisted test profile in the workspace and produces an evidence report with real subprocess exit codes.
-```bash
-repomedic verify ./fixtures/broken_sample_project --profile pytest
-```
+---
+
+## 💻 CLI Command Reference
+
+| Command | Usage | Description |
+|:---|:---|:---|
+| **`repomedic doctor`** | `repomedic doctor` | Health check for Python, Git, and active AI model provider configuration. |
+| **`repomedic inspect`** | `repomedic inspect [PATH]` | Discovers project manifests (`pyproject.toml`, `requirements.txt`, etc.) and candidate source files. |
+| **`repomedic diagnose`** | `repomedic diagnose [PATH] [--log FILE] [--out FILE]` | Collects bounded context, queries LLM, and outputs structured diagnosis + unified diff. |
+| **`repomedic apply`** | `repomedic apply [PATH] --patch FILE [-y/--yes]` | Validates security boundary (blocks directory traversal), renders color diff preview, and requests explicit approval. |
+| **`repomedic verify`** | `repomedic verify [PATH] [--profile pytest\|unittest]` | Executes allowlisted test runner in isolated environment and captures exit code evidence. |
 
 ---
 
@@ -232,23 +284,6 @@ pytest
 | **AT-07** | Secret leakage & credential protection | **PASSED** (`test_security.py` redacts API keys and tokens) |
 | **AT-08** | Fresh checkout setup | **PASSED** (Clean install from `pyproject.toml`) |
 | **AT-09** | Multi-Provider resolution (Nebius, NIM, OpenAI, Groq, Custom) | **PASSED** (`test_config.py` auto-detects providers) |
-
----
-
-## 🎬 End-to-End Walkthrough Demonstration
-
-A self-contained demonstration script is included to reproduce the complete diagnosis, baseline failure, human approval, and test verification workflow:
-
-```bash
-python demo/app.py
-```
-
-### Demonstration Steps:
-1. **Pre-flight Check**: Runs `repomedic doctor` to confirm toolchain readiness and provider detection.
-2. **Inspection**: Analyzes `fixtures/broken_sample_project` detecting manifests and Python source.
-3. **Baseline Failure**: Runs `pytest` on the unpatched sample project, proving the failure (AssertionError on addition).
-4. **Approval & Patch Application**: Previews the unified diff, passes security path validation, and applies the patch.
-5. **Verified Resolution**: Re-runs `pytest`, confirming exit code `0` and passing test output.
 
 ---
 
