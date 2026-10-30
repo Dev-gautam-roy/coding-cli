@@ -17,16 +17,16 @@ class Settings:
             return "***"
         return f"{self.api_key[:4]}...{self.api_key[-4:]}"
 
-# Provider preset defaults (base_url, default_model, provider_name)
+# Provider preset defaults: (api_key_env, base_url_env, model_env, default_base_url, default_model, provider_name)
 PROVIDER_PRESETS = [
-    ("NEBIUS_API_KEY", "https://api.tokenfactory.us-central1.nebius.com/v1/", "nvidia/Nemotron-3_5-Lightning", "Nebius Token Factory"),
-    ("NVIDIA_API_KEY", "https://integrate.api.nvidia.com/v1/", "nvidia/llama-3.1-nemotron-70b-instruct", "NVIDIA NIM"),
-    ("NVAPI_KEY", "https://integrate.api.nvidia.com/v1/", "nvidia/llama-3.1-nemotron-70b-instruct", "NVIDIA NIM"),
-    ("OPENAI_API_KEY", "https://api.openai.com/v1/", "gpt-4o-mini", "OpenAI"),
-    ("GROQ_API_KEY", "https://api.groq.com/openai/v1/", "llama-3.3-70b-versatile", "Groq"),
-    ("OPENROUTER_API_KEY", "https://openrouter.ai/api/v1/", "nvidia/llama-3.1-nemotron-70b-instruct", "OpenRouter"),
-    ("DEEPSEEK_API_KEY", "https://api.deepseek.com/v1/", "deepseek-chat", "DeepSeek"),
-    ("GEMINI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/openai/", "gemini-1.5-flash", "Google Gemini"),
+    ("NEBIUS_API_KEY", "NEBIUS_BASE_URL", "NEBIUS_MODEL", "https://api.tokenfactory.us-central1.nebius.com/v1/", "nvidia/Nemotron-3_5-Lightning", "Nebius Token Factory"),
+    ("NVIDIA_API_KEY", "NVIDIA_BASE_URL", "NVIDIA_MODEL", "https://integrate.api.nvidia.com/v1/", "nvidia/llama-3.1-nemotron-70b-instruct", "NVIDIA NIM"),
+    ("NVAPI_KEY", "NVIDIA_BASE_URL", "NVIDIA_MODEL", "https://integrate.api.nvidia.com/v1/", "nvidia/llama-3.1-nemotron-70b-instruct", "NVIDIA NIM"),
+    ("OPENAI_API_KEY", "OPENAI_BASE_URL", "OPENAI_MODEL", "https://api.openai.com/v1/", "gpt-4o-mini", "OpenAI"),
+    ("GROQ_API_KEY", "GROQ_BASE_URL", "GROQ_MODEL", "https://api.groq.com/openai/v1/", "llama-3.3-70b-versatile", "Groq"),
+    ("OPENROUTER_API_KEY", "OPENROUTER_BASE_URL", "OPENROUTER_MODEL", "https://openrouter.ai/api/v1/", "nvidia/llama-3.1-nemotron-70b-instruct", "OpenRouter"),
+    ("DEEPSEEK_API_KEY", "DEEPSEEK_BASE_URL", "DEEPSEEK_MODEL", "https://api.deepseek.com/v1/", "deepseek-chat", "DeepSeek"),
+    ("GEMINI_API_KEY", "GEMINI_BASE_URL", "GEMINI_MODEL", "https://generativelanguage.googleapis.com/v1beta/openai/", "gemini-1.5-flash", "Google Gemini"),
 ]
 
 def load_settings(env_file: Path | None = None) -> Settings:
@@ -39,39 +39,25 @@ def load_settings(env_file: Path | None = None) -> Settings:
     else:
         load_dotenv()
 
-    # 1. Check for explicit overrides first
-    explicit_base_url = (
-        os.getenv("LLM_BASE_URL")
-        or os.getenv("OPENAI_BASE_URL")
-        or os.getenv("NEBIUS_BASE_URL")
-        or os.getenv("BASE_URL")
-    )
-    explicit_model = (
-        os.getenv("LLM_MODEL")
-        or os.getenv("OPENAI_MODEL")
-        or os.getenv("NEBIUS_MODEL")
-        or os.getenv("MODEL")
-    )
-
-    # 2. Check for universal generic key
-    generic_key = (
-        os.getenv("LLM_API_KEY")
-        or os.getenv("REPOMEDIC_API_KEY")
-        or os.getenv("API_KEY")
-    )
+    # Universal override keys
+    generic_base_url = os.getenv("LLM_BASE_URL") or os.getenv("BASE_URL")
+    generic_model = os.getenv("LLM_MODEL") or os.getenv("MODEL")
+    generic_key = os.getenv("LLM_API_KEY") or os.getenv("REPOMEDIC_API_KEY") or os.getenv("API_KEY")
 
     chosen_key = ""
-    default_base_url = "https://api.tokenfactory.us-central1.nebius.com/v1/"
-    default_model = "nvidia/Nemotron-3_5-Lightning"
+    chosen_base_url = ""
+    chosen_model = ""
     provider_name = "Custom / OpenAI-Compatible"
 
-    # 3. Match known provider environment variables
-    for env_var, preset_url, preset_model, name in PROVIDER_PRESETS:
-        val = os.getenv(env_var, "").strip()
+    # Match active provider by checking non-empty API keys
+    for key_env, url_env, model_env, preset_url, preset_model, name in PROVIDER_PRESETS:
+        val = os.getenv(key_env, "").strip()
         if val:
             chosen_key = val
-            default_base_url = preset_url
-            default_model = preset_model
+            provider_url_override = os.getenv(url_env, "").strip()
+            provider_model_override = os.getenv(model_env, "").strip()
+            chosen_base_url = provider_url_override or preset_url
+            chosen_model = provider_model_override or preset_model
             provider_name = name
             break
 
@@ -79,21 +65,25 @@ def load_settings(env_file: Path | None = None) -> Settings:
     if not chosen_key and generic_key:
         chosen_key = generic_key.strip()
         if chosen_key.startswith("nvapi-"):
-            default_base_url = "https://integrate.api.nvidia.com/v1/"
-            default_model = "nvidia/llama-3.1-nemotron-70b-instruct"
+            chosen_base_url = "https://integrate.api.nvidia.com/v1/"
+            chosen_model = "nvidia/llama-3.1-nemotron-70b-instruct"
             provider_name = "NVIDIA NIM"
         elif chosen_key.startswith("gsk_"):
-            default_base_url = "https://api.groq.com/openai/v1/"
-            default_model = "llama-3.3-70b-versatile"
+            chosen_base_url = "https://api.groq.com/openai/v1/"
+            chosen_model = "llama-3.3-70b-versatile"
             provider_name = "Groq"
         elif chosen_key.startswith("sk-or-"):
-            default_base_url = "https://openrouter.ai/api/v1/"
-            default_model = "nvidia/llama-3.1-nemotron-70b-instruct"
+            chosen_base_url = "https://openrouter.ai/api/v1/"
+            chosen_model = "nvidia/llama-3.1-nemotron-70b-instruct"
             provider_name = "OpenRouter"
-        elif chosen_key.startswith("sk-") and not explicit_base_url:
-            default_base_url = "https://api.openai.com/v1/"
-            default_model = "gpt-4o-mini"
+        elif chosen_key.startswith("sk-"):
+            chosen_base_url = "https://api.openai.com/v1/"
+            chosen_model = "gpt-4o-mini"
             provider_name = "OpenAI"
+        else:
+            chosen_base_url = "https://api.tokenfactory.us-central1.nebius.com/v1/"
+            chosen_model = "nvidia/Nemotron-3_5-Lightning"
+            provider_name = "Custom Provider"
 
     if not chosen_key:
         raise RuntimeError(
@@ -101,8 +91,9 @@ def load_settings(env_file: Path | None = None) -> Settings:
             "GROQ_API_KEY, or LLM_API_KEY in your local environment or .env file."
         )
 
-    final_base_url = (explicit_base_url or default_base_url).strip().rstrip("/") + "/"
-    final_model = (explicit_model or default_model).strip()
+    # Let generic overrides take final precedence if defined
+    final_base_url = (generic_base_url or chosen_base_url).strip().rstrip("/") + "/"
+    final_model = (generic_model or chosen_model).strip()
 
     return Settings(
         api_key=chosen_key,

@@ -26,9 +26,29 @@ from .test_runner import run_test_profile
 app = typer.Typer(
     name="repomedic",
     help="RepoMedic: A Safe, Evidence-Based Terminal Agent for Repository Diagnosis and Verified Repair",
-    no_args_is_help=True,
+    invoke_without_command=True,
 )
 console = Console()
+
+@app.callback()
+def main(
+    ctx: typer.Context,
+    path: Path = typer.Option(
+        Path("."),
+        "--workspace",
+        "-w",
+        help="Workspace directory to operate on",
+        exists=True,
+        file_okay=False,
+    ),
+):
+    """
+    RepoMedic CLI: Interactive Claude Code style coding agent or single-command subroutines.
+    Running `repomedic` with no arguments launches the interactive Claude Code interface!
+    """
+    if ctx.invoked_subcommand is None:
+        from .claude_cli import run_claude_cli
+        run_claude_cli(path)
 
 @app.command()
 def doctor():
