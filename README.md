@@ -2,7 +2,8 @@
 
 # 🩺 RepoMedic CLI
 
-**A Safe, Evidence-Based Terminal Agent for Repository Diagnosis and Verified Repair**
+**A Safe, Evidence-Based Terminal Agent for Repository Diagnosis and Verified Repair**  
+*(Interactive Autonomous Coding Agent built like Claude Code)*
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-brightgreen.svg)](https://python.org)
@@ -21,12 +22,13 @@
 
 When a build fails, an import breaks, or a regression test crashes, developers often copy-paste errors into an AI chat window. While chat models can explain syntax errors, **conversational advice cannot prove that a patch works in an actual repository**. Moreover, granting an autonomous agent unbounded filesystem access or arbitrary shell execution introduces severe security and stability risks.
 
-**RepoMedic CLI** is a human-in-the-loop terminal coding agent designed for safe repository repair:
-1. **Bounded Context**: Ingests only relevant project manifests, targeted source files, and truncated error logs—automatically redacting credentials and API keys.
-2. **Flexible Model Engine**: Works with **Nebius Token Factory** (NVIDIA Nemotron), **NVIDIA NIM** (free without card), **OpenAI**, **Groq**, **OpenRouter**, or any standard OpenAI-compatible API.
-3. **Deterministic Security Boundary**: Validates every patch target before disk operations, strictly rejecting parent traversal (`..`), absolute paths, repository metadata (`.git`), and symlink escapes.
-4. **Human Approval Gate**: Interactive preview of unified diffs requiring explicit confirmation before any file modification.
-5. **Verified Evidence**: Executes allowlisted test profiles (`pytest`, `unittest`) in disposable copies with strict timeouts, reporting real subprocess exit codes instead of trusting an LLM's claim of success.
+**RepoMedic CLI** operates as a terminal-first, human-in-the-loop autonomous coding agent:
+1. **Interactive Claude Code Interface**: Launch with a single command (`repomedic`), converse in natural language, and let the agent autonomously inspect files, search code, propose patches, and execute test suites.
+2. **Autonomous Toolset**: Equipped with safe tools (`view_file`, `list_files`, `grep_code`, `propose_patch`, `run_tests`).
+3. **Flexible Model Engine**: Works with **Nebius Token Factory** (NVIDIA Nemotron), **NVIDIA NIM** (free instant key without credit card), **OpenAI**, **Groq**, **OpenRouter**, or local endpoints (Ollama / vLLM).
+4. **Deterministic Security Boundary**: Validates every patch target before disk operations, strictly rejecting parent traversal (`..`), absolute paths, repository metadata (`.git`), and symlink escapes.
+5. **Human Approval Gate**: Interactive preview of color-coded unified diffs requiring explicit confirmation before any file modification.
+6. **Verified Evidence**: Executes allowlisted test profiles (`pytest`, `unittest`) in disposable copies with strict timeouts, reporting real subprocess exit codes instead of trusting an LLM's claim of success.
 
 ---
 
@@ -68,93 +70,145 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A["User in Terminal"] --> B["CLI Command Parser (repomedic)"]
-    B --> C["Discovery & Bounded Context Engine"]
-    C -.->|"Apply file caps & secret redaction"| D["Context Bundle"]
-    D --> E["AI Inference (Nebius Nemotron / NVIDIA NIM / Any LLM)"]
-    E --> F["Structured Pydantic Diagnosis + Patch"]
-    F --> G{"Deterministic Patch & Security Validator"}
-    G -- "Traversal / Symlink / Malformed" --> H["Rejected & Aborted Safely"]
-    G -- "Valid In-Workspace Targets" --> I["Interactive Human Approval Gate"]
-    I -- "Declined" --> J["Exit without Modifying Files"]
-    I -- "Approved" --> K["Disposable Work Copy / Target Workspace"]
-    K --> L["Allowlisted Subprocess Test Runner (pytest/unittest)"]
-    L --> M["Evidence Report: Genuine Exit Code & Logs"]
+    A["User in Terminal"] --> B["Interactive Shell: repomedic (Claude Code Mode)"]
+    B --> C["Agentic Loop: Nemotron / Any LLM"]
+    C <-->|"Tool Calls: view_file, list_files, grep_code"| D["Repository Discovery & Code Search"]
+    C -->|"propose_patch"| E{"Deterministic Patch & Security Validator"}
+    E -- "Traversal / Symlink / Malformed" --> F["Rejected & Aborted Safely"]
+    E -- "Valid In-Workspace Targets" --> G["Interactive Human Approval Gate [y/N]"]
+    G -- "Declined" --> H["No Changes Made"]
+    G -- "Approved" --> I["Apply to Workspace / Disposable Copy"]
+    I --> J["run_tests (pytest / unittest)"]
+    J --> K["Genuine Subprocess Evidence Report (Exit Code)"]
 ```
 
 ---
 
-## 🌟 Core Features
+## ⚡ Complete Guide: How to Use RepoMedic CLI
 
-- **Universal Model Compatibility**: Supports **Nebius Token Factory**, **NVIDIA NIM**, **OpenAI**, **Groq**, **OpenRouter**, **DeepSeek**, or local endpoints (Ollama / vLLM).
-- **Auto-Provider Detection**: Automatically infers base URLs, recommended models, and auth patterns from your environment variables or key format.
-- **OWASP-Compliant Command Execution**: Safe subprocess execution with argument arrays (`shell=False`), eliminating shell-string interpolation risks.
-- **Traversal Defense**: Strict path resolution guaranteeing that model-authored patches cannot escape the repository root.
-- **Heuristic Secret Redaction**: Masks Bearer tokens, GitHub personal access tokens, and API keys before repository context leaves the local machine.
-- **Deterministic Test Fixtures**: Ships with a reproducible failing fixture (`fixtures/broken_sample_project/`) for immediate testing and verification without requiring live API quotas.
-- **Terminal UI**: Colored diff rendering, status tables, and diagnostic panels powered by Typer and Rich.
+RepoMedic gives you **two ways to work**:
+1. **Interactive Claude Code Mode** (Recommended): A live terminal assistant that listens to natural language and uses tools.
+2. **Direct CLI Commands**: Scriptable, single-shot commands for CI/CD and pipeline automation.
 
 ---
 
-## ⚡ Quickstart Guide (Up & Running in 2 Minutes)
+### Part 1: Interactive Agent Mode (Claude Code Experience)
 
-Follow these simple steps to install, configure, and run RepoMedic on your machine.
+To start the interactive coding agent, simply run `repomedic` with **no arguments**:
+
+```bash
+repomedic
+```
+*(Or `python -m repomedic.cli` if you prefer direct module execution)*
+
+#### The Interactive Prompt:
+```text
+RepoMedic v0.1.0 (Claude Code Mode)
+cwd: C:\your-project | model: Nebius Token Factory (nvidia/Nemotron-3_5-Lightning)
+Type your request naturally, or type /help, /doctor, /exit.
+
+repomedic > 
+```
+
+#### What You Can Say in Interactive Mode:
+
+* **Investigate and repair test failures:**
+  ```text
+  repomedic > find why tests in fixtures/broken_sample_project fail, fix it and verify
+  ```
+  *The agent will automatically list directory files, read the failing test, view `core.py`, detect the bug, propose a color-coded unified diff, ask for your confirmation, apply it upon approval, and re-run pytest to prove the fix.*
+
+* **Explore an unfamiliar repository:**
+  ```text
+  repomedic > explain the architecture and file structure of this repo
+  ```
+
+* **Search codebase for symbols or errors:**
+  ```text
+  repomedic > search for where add and multiply are defined
+  ```
+
+* **Interactive Human Approval Gate:**
+  Whenever the agent proposes changes to your code, it renders a syntax-highlighted diff and pauses:
+  ```text
+  Proposed Patch: Fix arithmetic calculation error in core.py
+    1 --- a/src/calculator/core.py
+    2 +++ b/src/calculator/core.py
+    3 @@ -3,3 +3,3 @@
+    4  def add(a: int, b: int) -> int:
+    5 -    return a - b
+    6 +    return a + b
+  
+  Apply this change? [y/N/e(dit)]: 
+  ```
+
+#### Built-in Slash Commands in Interactive Mode:
+- `/doctor` — Run system and AI provider health checks
+- `/clear` — Clear the terminal window
+- `/help` — Display list of commands
+- `/exit` — Quit the interactive session
+
+---
+
+### Part 2: Direct Scriptable CLI Commands
+
+If you want to run specific subroutines without entering the interactive shell:
+
+| Task | Command |
+|:---|:---|
+| **Health Check** | `repomedic doctor` |
+| **Inspect Repo Structure** | `repomedic inspect ./path/to/repo` |
+| **One-Shot Diagnosis** | `repomedic diagnose ./path/to/repo --log test.log --out fix.json` |
+| **Apply Patch with Approval** | `repomedic apply ./path/to/repo --patch fix.patch` |
+| **Verify Tests & Exit Code** | `repomedic verify ./path/to/repo --profile pytest` |
+
+---
+
+## 🚀 Quickstart & Setup (2-Minute Walkthrough)
 
 ### Prerequisites
-- **Python 3.11+** installed (`python --version`)
-- **Git** installed and available in PATH
-- **Any AI API Key** (Nebius Token Factory, NVIDIA NIM, OpenAI, Groq, OpenRouter, or local LLM)
+- **Python**: 3.11 or newer (`python --version`)
+- **Git**: Installed and available in PATH
+- **Any AI API Key**: Nebius Token Factory, NVIDIA NIM, OpenAI, Groq, OpenRouter, or Local LLM.
 
 ---
 
-### Step 1: Clone & Setup Environment
+### Step 1: Clone & Setup
 
 #### 🐧 Linux / macOS:
 ```bash
-# 1. Clone the repository
 git clone https://github.com/Dev-gautam-roy/coding-cli.git repomedic
 cd repomedic
-
-# 2. Create and activate a virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
-
-# 3. Install RepoMedic in editable mode
 pip install --upgrade pip
 pip install -e ".[dev]"
 ```
 
 #### 🪟 Windows (PowerShell):
 ```powershell
-# 1. Clone the repository
 git clone https://github.com/Dev-gautam-roy/coding-cli.git repomedic
 cd repomedic
-
-# 2. Create and activate a virtual environment
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-
-# 3. Install RepoMedic in editable mode
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
 
 ---
 
-### Step 2: Configure Your API Key
+### Step 2: Configure Your API Key (Choose Any Provider)
 
-Create your local `.env` configuration file from the template:
-
-**Linux / macOS:**
+Copy the configuration template:
 ```bash
+# Linux / macOS
 cp .env.example .env
-```
-**Windows (PowerShell):**
-```powershell
+
+# Windows PowerShell
 Copy-Item .env.example .env
 ```
 
-Open `.env` in any editor and set **ONE** of the following options:
+Open `.env` and set whichever key you have:
 
 #### Option A: Nebius Token Factory (Official Hackathon Provider)
 ```env
@@ -165,18 +219,18 @@ NEBIUS_MODEL=nvidia/Nemotron-3_5-Lightning
 
 #### Option B: NVIDIA NIM (Free instant key, no credit card required at [build.nvidia.com](https://build.nvidia.com))
 ```env
-NVIDIA_API_KEY=nvapi-your_nvidia_key_here
+NVIDIA_API_KEY=nvapi-your_key_here
 ```
 
 #### Option C: OpenAI
 ```env
-OPENAI_API_KEY=sk-your_openai_key_here
+OPENAI_API_KEY=sk-your_key_here
 OPENAI_MODEL=gpt-4o-mini
 ```
 
 #### Option D: Groq (Ultra-fast free tier at [console.groq.com](https://console.groq.com))
 ```env
-GROQ_API_KEY=gsk_your_groq_key_here
+GROQ_API_KEY=gsk_your_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
 ```
 
@@ -187,20 +241,16 @@ LLM_BASE_URL=http://localhost:11434/v1/
 LLM_MODEL=llama3.2
 ```
 
-> **Note**: `.env` is ignored by Git to ensure your secrets are never committed.
-
 ---
 
-### Step 3: Run the Pre-Flight Check (`repomedic doctor`)
-
-Verify your installation, Python environment, Git path, and AI credentials:
+### Step 3: Run Doctor Health Check
 
 ```bash
 repomedic doctor
 ```
 
-**Expected output:**
-```
+Output confirms that your Python runtime, Git executable, and target AI provider are recognized and ready:
+```text
 +------------------------------+
 | RepoMedic Environment Doctor |
 +------------------------------+
@@ -221,45 +271,11 @@ repomedic doctor
 
 ### Step 4: Run the Automated 5-Step Demo
 
-To witness the entire lifecycle—from baseline test failure, AI-driven diagnosis, security gate validation, diff inspection, and passing verification—simply run:
+To witness the entire repair lifecycle execute on the sample broken project:
 
 ```bash
 python demo/app.py
 ```
-
-This self-contained script runs on the bundled deterministic fixture and proves the repair cycle end-to-end!
-
----
-
-### Step 5: Test on Your Own Repository
-
-To diagnose and repair any repository:
-
-```bash
-# 1. Inspect repository structure & manifests
-repomedic inspect /path/to/repo
-
-# 2. Diagnose an issue (optionally pass test/build error logs)
-repomedic diagnose /path/to/repo --log /path/to/test.log --out /path/to/fix.json
-
-# 3. Safely preview and apply an approved unified diff patch
-repomedic apply /path/to/repo --patch /path/to/fix.patch
-
-# 4. Verify that the fix passes repository tests
-repomedic verify /path/to/repo --profile pytest
-```
-
----
-
-## 💻 CLI Command Reference
-
-| Command | Usage | Description |
-|:---|:---|:---|
-| **`repomedic doctor`** | `repomedic doctor` | Health check for Python, Git, and active AI model provider configuration. |
-| **`repomedic inspect`** | `repomedic inspect [PATH]` | Discovers project manifests (`pyproject.toml`, `requirements.txt`, etc.) and candidate source files. |
-| **`repomedic diagnose`** | `repomedic diagnose [PATH] [--log FILE] [--out FILE]` | Collects bounded context, queries LLM, and outputs structured diagnosis + unified diff. |
-| **`repomedic apply`** | `repomedic apply [PATH] --patch FILE [-y/--yes]` | Validates security boundary (blocks directory traversal), renders color diff preview, and requests explicit approval. |
-| **`repomedic verify`** | `repomedic verify [PATH] [--profile pytest\|unittest]` | Executes allowlisted test runner in isolated environment and captures exit code evidence. |
 
 ---
 
@@ -291,7 +307,7 @@ pytest
 
 | Threat | RepoMedic Mitigation |
 |:---|:---|
-| **Arbitrary Command Execution** | Model is never permitted to emit shell commands for execution; test execution is strictly restricted to allowlisted profiles (`pytest`, `unittest`) using `shell=False`. |
+| **Arbitrary Command Execution** | Model is never permitted to emit arbitrary shell commands; test execution is strictly restricted to allowlisted profiles (`pytest`, `unittest`) using `shell=False`. |
 | **Path Traversal / Arbitrary File Overwrite** | Paths are canonicalized with `Path.resolve()` and tested with `relative_to(root)`. Any path containing `..`, absolute drives, or `.git` directories is rejected immediately. |
 | **Secret Leakage to Remote LLM** | Known credential formats (GitHub PATs, AWS/GCP secrets, Bearer tokens, API keys) and sensitive file extensions (`.env`, `.pem`, `.key`, `id_rsa`) are stripped prior to inference. |
 | **Silent / Hallucinated Fixes** | LLM self-assessments (*"I have fixed this"*) are disregarded; only genuine OS process exit codes (`returncode == 0`) are reported as verification evidence. |
